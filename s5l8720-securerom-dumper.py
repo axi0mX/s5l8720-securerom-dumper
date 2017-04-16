@@ -1,8 +1,10 @@
 #!/usr/bin/python
-# S5L8720 (iPod Touch 2G) SecureROM dumper by @axi0mX
-# based on steaks4uce exploit by @pod2g
+# S5L8720 - iPod Touch (2nd generation) - SecureROM dumper
+# based on steaks4uce exploit by pod2g
+# Author: axi0mX
 
-import hashlib, struct, sys, usb
+import hashlib, struct, sys
+import usb # pyusb: use 'pip install pyusb' to install this module
 
 class DeviceConfig:
   def __init__(self, version, buffer_addr, sha256):
@@ -22,7 +24,7 @@ FILENAME_FORMAT = 'SecureROM-%s-RELEASE.dump'
 BUFFER_ADDR_PLACEHOLDER = 0xDEADDEAD
 INDEX_PLACEHOLDER = 0xBAADBAAD
 
-f = open('build/shellcode.bin', 'rb')
+f = open('bin/shellcode.bin', 'rb')
 shellcode = f.read()
 f.close()
 
@@ -59,18 +61,18 @@ def create_payload(buffer_addr, index):
   return payload
 
 if __name__ == '__main__':
-  print '*** S5L8720 (iPod Touch 2G) SecureROM dumper by @axi0mX ***'
-  print '*** based on steaks4uce exploit (heap overflow) by @pod2g ***'
+  print '*** S5L8720 - iPod Touch (2nd generation) - SecureROM dumper by axi0mX ***'
+  print '*** based on steaks4uce exploit (heap overflow) by pod2g ***'
   print 'Make sure an S5L8720 device in SecureROM DFU Mode is connected.'
 
   device = usb.core.find(idVendor=0x5AC, idProduct=0x1227)
   if device is None:
-    print 'ERROR! No Apple device in DFU Mode (0x1227) detected. Exiting.'
+    print 'ERROR: No Apple device in DFU Mode (0x1227) detected. Exiting.'
     sys.exit(1)
 
   print 'Found:', device.serial_number
   if CPID_STRING not in device.serial_number:
-    print 'ERROR! This is not a compatible device. This tool is for S5L8720 devices (iPod Touch 2G) only. Exiting.'
+    print 'ERROR: This is not a compatible device. This tool is for S5L8720 devices only. Exiting.'
     sys.exit(1)
 
   chosenConfig = None
@@ -79,7 +81,8 @@ if __name__ == '__main__':
       chosenConfig = config
       break
   if chosenConfig is None:
-    print 'ERROR! Unexpected version mismatch. Make sure this S5L8720 device is in SecureROM DFU Mode. Exiting.'
+    print 'ERROR: CPID is compatible, but serial number string does not match.'
+    print 'Make sure device is in SecureROM DFU Mode and not LLB/iBSS DFU Mode. Exiting.'
     sys.exit(1)
   
   print 'Dumping SecureROM.'
@@ -97,10 +100,10 @@ if __name__ == '__main__':
 
   filename = FILENAME_FORMAT % chosenConfig.version
   if hashlib.sha256(dump).hexdigest() == chosenConfig.sha256:
-    print 'SUCCESS! SecureROM dump is complete and SHA256 hash matches the expected value.'
+    print 'SUCCESS: SecureROM dump is complete and SHA256 hash matches the expected value.'
   else:
     filename = 'CORRUPTED-' + filename
-    print 'ERROR! Try again, this dump appears to be corrupted. SHA256 hash does not match. Saving it anyway.'
+    print 'ERROR: Try again, this dump appears to be corrupted. SHA256 hash does not match. Saving it anyway.'
   
   f = open(filename, 'wb')
   f.write(dump)

@@ -1,4 +1,4 @@
-@ shellcode for s5l8720-securerom-dumper by @axi0mX
+@ shellcode for s5l8720-securerom-dumper by axi0mX
 
 .pool
 .set securerom_addr,    0x20000000
